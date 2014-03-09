@@ -1,5 +1,6 @@
 package org.albatrosscad.device
 
+import org.albatrosscad.math._
 import org.albatrosscad.math.Implicits._
 
 import breeze.linalg._
@@ -28,13 +29,13 @@ class DeltaPrinter(
 
   /** Calculate the carriage positions that would place the print head at the desired location. */
   def getCarriagePositionsForHeadAt(head:DenseVector[Double]): (Double,Double,Double) = {
-    val headFlat = new DenseVector[Double](Array(head(Axis.X),head(Axis.Y),0))
-    val A = headFlat - tower(Tower.A,0)
-    val B = headFlat - tower(Tower.B,0)
-    val C = headFlat - tower(Tower.C,0)
-    val ha = head(Axis.Z) + sqrt(pow(diagonalRod,2)+pow(A.magnitude,2))
-    val hb = head(Axis.Z) + sqrt(pow(diagonalRod,2)+pow(B.magnitude,2))
-    val hc = head(Axis.Z) + sqrt(pow(diagonalRod,2)+pow(C.magnitude,2))
+    val headFlat = head.withZ(0)
+    val A = (headFlat+effectorVector(Tower.A)) - tower(Tower.A,0) 
+    val B = (headFlat+effectorVector(Tower.B)) - tower(Tower.B,0)
+    val C = (headFlat+effectorVector(Tower.C)) - tower(Tower.C,0)
+    val ha = head(Axis.Z) + sqrt(pow(diagonalRod,2)-pow(A.magnitude,2))
+    val hb = head(Axis.Z) + sqrt(pow(diagonalRod,2)-pow(B.magnitude,2))
+    val hc = head(Axis.Z) + sqrt(pow(diagonalRod,2)-pow(C.magnitude,2))
     (ha,hb,hc)
   }
   
@@ -42,56 +43,37 @@ class DeltaPrinter(
 
   /** Get a vector representing the given height on the given tower. */
   private def tower(n:Int, h:Double):DenseVector[Double] = n match {
-    case Tower.A => new DenseVector[Double](Array(-towerDistance*DeltaPrinter.SIN_60,-towerDistance*DeltaPrinter.COS_60,h))
-    case Tower.B => new DenseVector[Double](Array(towerDistance*DeltaPrinter.SIN_60,-towerDistance*DeltaPrinter.COS_60,h))
-    case Tower.C => new DenseVector[Double](Array(0, towerDistance, h))
+    case Tower.A => (-towerDistance*DeltaPrinter.SIN_60,-towerDistance*DeltaPrinter.COS_60,h)
+    case Tower.B => (towerDistance*DeltaPrinter.SIN_60,-towerDistance*DeltaPrinter.COS_60,h)
+    case Tower.C => (0.0, towerDistance, h)
     case _ => throw new IllegalTowerException(n)
   }
 
   private def effectorVector(n:Int):DenseVector[Double] = n match {
-    case Tower.A => new DenseVector[Double](Array(-effectorOffset*DeltaPrinter.SIN_60,-effectorOffset*DeltaPrinter.COS_60,0))
-    case Tower.B => new DenseVector[Double](Array(effectorOffset*DeltaPrinter.SIN_60,-effectorOffset*DeltaPrinter.COS_60,0))
-    case Tower.C => new DenseVector[Double](Array(0, effectorOffset, 0))
+    case Tower.A => (-effectorOffset*DeltaPrinter.SIN_60,-effectorOffset*DeltaPrinter.COS_60,0.0)
+    case Tower.B => (effectorOffset*DeltaPrinter.SIN_60,-effectorOffset*DeltaPrinter.COS_60,0.0)
+    case Tower.C => (0.0, effectorOffset, 0.0)
     case _ => throw new IllegalTowerException(n)
   }
-
-  private def magnitude(v:DenseVector[Double]) = sqrt(v dot v)
-  private def normalize(v:DenseVector[Double]) = v / magnitude(v)
 
   /**
    Calculate a print head position given the positions of the carriages.
    */
   def getHeadPositionForCarriagesAt(ha:Double,hb:Double,hc:Double): DenseVector[Double] = {
     // locations of carriages A, B, C
-    val C_a = tower(Tower.A,ha) - effectorVector(Tower.A)
-    val C_b = tower(Tower.B,hb) - effectorVector(Tower.B)
-    val C_c = tower(Tower.C,hc) - effectorVector(Tower.C)
+    val Jp1 = tower(Tower.A,ha) - effectorVector(Tower.A)
+    val Jp2 = tower(Tower.B,hb) - effectorVector(Tower.B)
+    val Jp3 = tower(Tower.C,hc) - effectorVector(Tower.C)
 
-    // x axis in carriage coordinates
-    val x_hat_star = normalize(C_b - C_a)
+    val intersections = Sphere.intersection(
+      new Sphere(Jp1, diagonalRod),
+      new Sphere(Jp2, diagonalRod),
+      new Sphere(Jp3, diagonalRod)
+    )
 
-    // (i,j,0) is the location of carriage C in carriage coordinates
-    val i = x_hat_star dot (C_c - C_a)
-
-    // y axis in carriage coordinates
-    val y_hat_star = normalize( C_c - C_a - x_hat_star*i)
-
-    // z axis in carriage coordinates
-    val z_hat_star = cross(x_hat_star, y_hat_star)
-
-    // distance between carriages A and B
-    val d = magnitude(C_b - C_a)
-
-    val j = y_hat_star dot (C_c - C_a)
-    val r = diagonalRod
-
-    // (x_star,y_star,z_star) is the print head position in carriage coordinates
-    val x_star = pow(d,2)/(2*d)
-    val y_star = (pow(i,2)+pow(j,2))/(2*j) - (i/j)*x_star
-    val z_star = sqrt(pow(r,2)-pow(x_star,2)-pow(y_star,2))
-
-    // convert back to world coordinates
-    C_a + x_hat_star*x_star + y_hat_star*y_star + z_hat_star*z_star
+    if(intersections.length==0) return (Double.NaN,Double.NaN,Double.NaN)
+    if(intersections.length==1) return intersections(0)
+    intersections(1)
   }
 
   def getHeadPositionForCarriagesAt(c:(Double,Double,Double)):DenseVector[Double] = c match {
@@ -112,7 +94,7 @@ class DeltaPrinter(
                       for(eOff <- (effectorOffset - effectorOffsetRange/2) to (effectorOffset + effectorOffsetRange/2) by effectorOffsetStep){
                         val printer = this.withDiagonalRodLength(dRod).withTowerDistance(tDis).withEffectorOffset(eOff)
                         val distances = heightsAndMeasuredPositions map { 
-                          case ((ha:Double,hb:Double,hc:Double),v:DenseVector[Double]) => magnitude(v - printer.getHeadPositionForCarriagesAt(ha,hb,hc)) 
+                          case ((ha:Double,hb:Double,hc:Double),v:DenseVector[Double]) => (v - printer.getHeadPositionForCarriagesAt(ha,hb,hc)).magnitude 
                         }
                         val sigma = distances.reduce((a,b)=>a+b)/heightsAndMeasuredPositions.length
                         if(sigma<minSigma){

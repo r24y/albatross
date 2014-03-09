@@ -11,13 +11,18 @@ import org.scalatest._
 // with collinear centers are correctly computed. I'm leaving out
 // the test case for now because I won't run into that case, but
 // in the future I definitely want to see it added in.
+// It should also check for concentric spheres.
 class SphereSpec extends FlatSpec {
-  val s = new Sphere((0.0,0.0,0.0),1)
-  "Sphere [(0,0,0), 1]" should "contain (0.2,0.2,0.2)" in {
+  val s = new Sphere
+  val ss = new Sphere(1.5).withX(2)
+  s"$s" should "contain (0.2,0.2,0.2)" in {
     assert(s contains (0.2,0.2,0.2))
   }
   it should "not contain (0,0,5)" in {
     assert(!(s contains (0.0,0.0,5.0)))
+  }
+  it should s"intersect $ss" in {
+    assert(s intersects ss)
   }
 
   "Three intersecting spheres" should "intersect in two places" in {
