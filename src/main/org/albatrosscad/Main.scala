@@ -34,11 +34,11 @@ class SimpleScene extends GLEventListener {
     // draw a triangle filling the window
     gl.glBegin(GL.GL_TRIANGLES);
     gl.glColor3f(1, 0, 0);
-    gl.glVertex2f(-c, -c);
+    gl.glVertex2f(c,s);
     gl.glColor3f(0, 1, 0);
-    gl.glVertex2f(0, c);
+    gl.glVertex2f(s,-c);
     gl.glColor3f(0, 0, 1);
-    gl.glVertex2f(s, -s);
+    gl.glVertex2f(-c,-s);
     gl.glEnd();
   }
 
@@ -57,7 +57,8 @@ class SimpleScene extends GLEventListener {
 
 object Main {
 
-  def main(args:Array[String]):Unit = {
+  // change this to "Main" if you want to run it
+  def rain(args:Array[String]):Unit = {
     val glp = GLProfile.getDefault
     val caps = new GLCapabilities(glp)
     val canvas = new GLCanvas(caps)
