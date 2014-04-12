@@ -1,5 +1,7 @@
 package org.albatrosscad.desktop
 
+import org.albatrosscad.atom._
+
 import org.fife.ui.rtextarea._
 import org.fife.ui.rsyntaxtextarea._
 

@@ -2,6 +2,8 @@ package org.albatrosscad.desktop
 
 import com.jogamp.opengl.util._
 
+import org.albatrosscad._
+
 import javax.media.opengl._
 import javax.media.opengl.glu._
 import javax.media.opengl.awt.GLCanvas
@@ -12,7 +14,7 @@ import java.awt.event._
 
 import scala.math._
 
-class View3D extends JPanel with GLEventListener{
+class View3D extends JPanel with GLEventListener with Draggable{
   val glp = GLProfile.getDefault
   val caps = new GLCapabilities(glp)
   val canvas = new GLCanvas(caps)
@@ -20,9 +22,22 @@ class View3D extends JPanel with GLEventListener{
     def actionPerformed(e:ActionEvent):Unit = canvas.display()
   })
 
+  var theta = 0f
+  var phi = 0f
+
+  // Send our canvas's mouse events to be handled by `Draggable`.
+  attachMouseEvents(canvas)
+
+  // Send GL events to ourself.
   canvas.addGLEventListener(this)
+
+
+  // Layout stuff.
   setLayout(new BorderLayout)
   add(canvas, BorderLayout.CENTER)
+
+  // Set the minimum size properly; if this isn't set then
+  // the split pane can't handle the resizing.
   setMinimumSize(new Dimension(1,1))
 
   def display(drawable:GLAutoDrawable):Unit = {
@@ -31,6 +46,12 @@ class View3D extends JPanel with GLEventListener{
   }
 
   private def update():Unit = {
+  }
+
+  def positionUpdated(theta:Double, phi:Double):Unit = {
+    this.theta = theta.asInstanceOf[Float]
+    this.phi = phi.asInstanceOf[Float]
+    canvas.display()
   }
 
   private def render(drawable:GLAutoDrawable):Unit = {
@@ -45,24 +66,8 @@ class View3D extends JPanel with GLEventListener{
       }
     }
 
+    gl.glClearColor(LAF.primaryColor._1/255f, LAF.primaryColor._2/255f, LAF.primaryColor._3/255f, 1f)
     gl.glClear(GL.GL_COLOR_BUFFER_BIT)
-
-    /*
-    gl.glBegin(GL.GL_TRIANGLES)
-    gl.glColor3f(1, 0, 0)
-    gl.glVertex2f(-0.5f,-0.5f)
-    gl.glColor3f(0, 1, 0)
-    gl.glVertex2f(1,-1)
-    gl.glColor3f(0, 0, 1)
-    gl.glVertex2f(-1,1)
-    gl.glColor3f(1, 1, 1)
-    gl.glVertex2f(0.5f,0.5f)
-    gl.glColor3f(0, 1, 0)
-    gl.glVertex2f(1,-1)
-    gl.glColor3f(0, 0, 1)
-    gl.glVertex2f(-1,1)
-    gl.glEnd()
-    */
 
     val glu = new GLU
 
@@ -79,7 +84,8 @@ class View3D extends JPanel with GLEventListener{
     gl.glMatrixMode(fixedfunc.GLMatrixFunc.GL_MODELVIEW);
     gl.glLoadIdentity();
 
-    gl.glRotatef((System.currentTimeMillis/10%360).asInstanceOf[Float],0,1,0)
+    gl.glRotatef(phi.asInstanceOf[Float],1,0,0)
+    gl.glRotatef(theta.asInstanceOf[Float],0,1,0)
 
     gl.glBegin(GL.GL_LINES)
     gl.glColor3f(1,1,1)

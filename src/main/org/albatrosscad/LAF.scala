@@ -1,0 +1,7 @@
+package org.albatrosscad
+
+object LAF{
+  val primaryColor = (0x04, 0x43, 0x73)
+  val supportColor1 = (0xFF, 0xCE, 0x00)
+  val supportColor2 = (0xFF, 0x18, 0x00)
+}

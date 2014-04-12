@@ -24,6 +24,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test"
 unmanagedSourceDirectories in Compile <++= baseDirectory { base =>
   Seq(
     base / "src/main/org/albatrosscad/",
+    base / "src/main/org/albatrosscad/desktop",
+    base / "src/main/org/albatrosscad/math",
     base / "src/main/org/albatrosscad/devices"
   )
 }
