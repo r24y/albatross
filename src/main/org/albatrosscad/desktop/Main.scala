@@ -52,33 +52,91 @@ class Main extends JFrame {
   private def createMenus():Unit = {
     val bar = new JMenuBar
 
-    val file = new JMenu("File")
-    val newDoc = new JMenuItem("New",KeyEvent.VK_N)
-    val open = new JMenuItem("Open", KeyEvent.VK_O)
-    val recent = {
-      val recent = new JMenu("Open recent")
-      recent.setMnemonic(KeyEvent.VK_R)
-      (scala.List("foo","bar","baz","quux")).map{s:String => new JMenuItem(s+".cad.scala")}.foreach(recent add _)
-      recent
+    val file = {
+      val file = new JMenu("File")
+      val newDoc = new JMenuItem("New",KeyEvent.VK_N)
+      val open = new JMenuItem("Open", KeyEvent.VK_O)
+      val recent = {
+        val recent = new JMenu("Open recent")
+        recent.setMnemonic(KeyEvent.VK_R)
+        (scala.List("foo","bar","baz","quux")).map{s:String => new JMenuItem(s+".cad.scala")}.foreach(recent add _)
+        recent
+      }
+      val save = new JMenuItem("Save", KeyEvent.VK_S)
+      val samples = {
+        val samples = new JMenu("Examples")
+        samples.setMnemonic(KeyEvent.VK_E)
+        (scala.List("Gear","Widget","Print head")).map(new JMenuItem(_)).foreach(samples add _)
+        samples
+      }
+      val exit = new JMenuItem("Exit",KeyEvent.VK_X)
+      file.add(newDoc)
+      file.add(open)
+      file.add(recent)
+      file.add(save)
+      file.addSeparator()
+      file.add(samples)
+      file.addSeparator()
+      file.add(exit)
+      file.setMnemonic(KeyEvent.VK_F)
+      file
     }
-    val save = new JMenuItem("Save", KeyEvent.VK_S)
-    val samples = {
-      val samples = new JMenu("Examples")
-      samples.setMnemonic(KeyEvent.VK_E)
-      (scala.List("Gear","Widget","Print head")).map(new JMenuItem(_)).foreach(samples add _)
-      samples
+
+    val view = {
+      val view = new JMenu("View")
+      view.setMnemonic(KeyEvent.VK_V)
+      val prefs = new JMenuItem("Preferences", KeyEvent.VK_P)
+      view.add(prefs)
+      view
     }
-    val exit = new JMenuItem("Exit",KeyEvent.VK_X)
-    file.add(newDoc)
-    file.add(open)
-    file.add(recent)
-    file.add(save)
-    file.addSeparator()
-    file.add(samples)
-    file.addSeparator()
-    file.add(exit)
-    file.setMnemonic(KeyEvent.VK_F)
+
+    val build = {
+      val build = new JMenu("Build")
+      build.setMnemonic(KeyEvent.VK_B)
+
+      val scad = new JMenuItem("Build with OpenSCAD", KeyEvent.VK_O)
+      val povray = new JMenuItem("Render with POVRay", KeyEvent.VK_R)
+      val prefs = new JMenuItem("Build preferences", KeyEvent.VK_P)
+      build.add(scad)
+      build.add(povray)
+      build.addSeparator()
+      build.add(prefs)
+      build
+    }
+
+    val share = {
+      val share = new JMenu("Share")
+      share.setMnemonic(KeyEvent.VK_S)
+      val crossing = new JMenuItem("Albatross Crossing", KeyEvent.VK_A)
+      val github = new JMenuItem("Github", KeyEvent.VK_G)
+      val thingi = new JMenuItem("Thingiverse", KeyEvent.VK_T)
+      val imgur = new JMenuItem("Imgur", KeyEvent.VK_I)
+      share.add(crossing)
+      share.add(github)
+      share.add(thingi)
+      share.add(imgur)
+      share
+    }
+
+    val help = {
+      val help = new JMenu("Help")
+      help.setMnemonic(KeyEvent.VK_H)
+      val tip = new JMenuItem("Tip of the day", KeyEvent.VK_T)
+      val cheat = new JMenuItem("Cheat sheet", KeyEvent.VK_C)
+      val manual = new JMenuItem("Manual", KeyEvent.VK_M)
+      val about = new JMenuItem("About", KeyEvent.VK_A)
+      help.add(tip)
+      help.add(cheat)
+      help.add(manual)
+      help.add(about)
+      help
+    }
+
     bar.add(file)
+    bar.add(view)
+    bar.add(build)
+    bar.add(share)
+    bar.add(help)
 
     setJMenuBar(bar)
   }
