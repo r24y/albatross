@@ -96,11 +96,13 @@ object Main{
       }
     }
     setLAF()
-    val xToolkit = Toolkit.getDefaultToolkit
-    val awtAppClassNameField =
-      xToolkit.getClass().getDeclaredField("awtAppClassName");
-    awtAppClassNameField.setAccessible(true);
-    awtAppClassNameField.set(xToolkit, "Albatross");
+    if(System.getenv("XDG_CURRENT_DESKTOP") == "GNOME") {
+      val xToolkit = Toolkit.getDefaultToolkit
+      val awtAppClassNameField =
+        xToolkit.getClass().getDeclaredField("awtAppClassName");
+      awtAppClassNameField.setAccessible(true);
+      awtAppClassNameField.set(xToolkit, "Albatross");
+    }
 
     SwingUtilities.invokeLater(new Runnable(){
       override def run() = {
