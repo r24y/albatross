@@ -3,13 +3,15 @@ package org.albatrosscad.desktop
 import com.jogamp.opengl.util._
 
 import org.albatrosscad._
+import org.albatrosscad.atom._
+import org.albatrosscad.graphics.Implicits._
 
 import javax.media.opengl._
 import javax.media.opengl.glu._
 import javax.media.opengl.awt.GLCanvas
 
 import javax.swing._
-import java.awt._
+import java.awt.{List=>_, _}
 import java.awt.event._
 
 import scala.math._
@@ -24,6 +26,10 @@ class View3D extends JPanel with GLEventListener with Draggable{
 
   var theta = 0f
   var phi = 0f
+  val halfEdge:QubicBezierHalfEdge[Double] = HalfEdge.bezier(List(Vector(-1.0,-1.0,-1.0),
+                                 Vector(-1.0, 1.0,-1.0),
+                                 Vector( 1.0, 1.0, 1.0),
+                                 Vector(-1.0, 1.0, 1.0))).asInstanceOf[QubicBezierHalfEdge[Double]]
 
   // Send our canvas's mouse events to be handled by `Draggable`.
   attachMouseEvents(canvas)
@@ -101,6 +107,7 @@ class View3D extends JPanel with GLEventListener with Draggable{
         gl.glVertex3f(x,1,y)
         gl.glVertex3f(x,-1,y)
     }
+    halfEdge.render(gl)
     gl.glEnd()
 
 
